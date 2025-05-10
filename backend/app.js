@@ -36,8 +36,12 @@ const api = process.env.API_URL;
 
 app.use(
   cors({
-    origin: "http://localhost:5173", // Frontend URL
-    methods: ["PUT", "GET", "POST", "DELETE"],
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "https://e-shop-lbbw.onrender.com",
+    ], // Allow both development ports
+    methods: ["PUT", "GET", "POST", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })

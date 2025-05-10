@@ -1,0 +1,13 @@
+{
+  "name": "shopping",
+  "private": true,
+  "workspaces": [
+    "frontend/eshop"
+  ],
+  "scripts": {
+    "build": "cd frontend/eshop && npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.16"
+  }
+}
