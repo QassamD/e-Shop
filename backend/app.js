@@ -15,13 +15,15 @@ const errorHandler = require("./helpers/error-handler");
 
 // Database connection
 
+const port = "https://e-shop-lbbw.onrender.com" || 3000;
+
 mongoose
   .connect(process.env.CONNECTION_STRING)
   .then(() => {
     console.log("Database Connection is ready .....");
 
     // Start server AFTER successful connection
-    app.listen(3000, () => {
+    app.listen(port, () => {
       console.log("Server is running http://localhost:3000");
     });
   })
@@ -40,6 +42,7 @@ app.use(
       "http://localhost:5173",
       "http://localhost:3000",
       "https://e-shop-lbbw.onrender.com",
+      "https://gorgeous-youtiao-c51f0a.netlify.app/",
     ], // Allow both development ports
     methods: ["PUT", "GET", "POST", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -71,6 +74,10 @@ app.use(`${api}/user`, usersRouter);
 app.use(`${api}/order`, ordersRouter);
 app.use(`${api}/category`, categoriesRouter);
 app.use(`${api}/`, paymentRouter);
+
+app.get("/api/healthcheck", (req, res) => {
+  res.status(200).json({ status: "Server is running!" });
+});
 
 // mongoose
 //   .connect(process.env.CONNECTION_STRING, {
