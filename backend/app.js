@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
@@ -23,7 +24,7 @@ mongoose
     console.log("Database Connection is ready .....");
 
     // Start server AFTER successful connection
-    app.listen(port, () => {
+    app.listen(port, "0,0,0,0", () => {
       console.log("Server is running http://localhost:3000");
     });
   })
@@ -32,8 +33,6 @@ mongoose
     process.exit(1);
   });
 
-// require("dotenv/config");
-require("dotenv").config();
 const api = process.env.API_URL;
 
 app.use(
@@ -60,24 +59,38 @@ app.use(errorHandler);
 // mongoose.set("debug", true);
 // mongoose.set("strictQuery", true);
 
-require("./models/category");
-require("./models/user");
-require("./models/product");
-require("./models/order");
-require("./models/order-item");
+mongoose
+  .connect(process.env.CONNECTION_STRING)
+  .then(() => {
+    console.log("Database Connected");
 
-console.log(`API base path: ${api}`);
+    require("./models/category");
+    require("./models/user");
+    require("./models/product");
+    require("./models/order");
+    require("./models/order-item");
 
-//Routes
-app.use(`${api}/product`, productsRouter);
-app.use(`${api}/user`, usersRouter);
-app.use(`${api}/order`, ordersRouter);
-app.use(`${api}/category`, categoriesRouter);
-app.use(`${api}/`, paymentRouter);
+    console.log(`API base path: ${api}`);
 
-app.get("/api/healthcheck", (req, res) => {
-  res.status(200).json({ status: "Server is running!" });
-});
+    //Routes
+    app.use(`${api}/product`, productsRouter);
+    app.use(`${api}/user`, usersRouter);
+    app.use(`${api}/order`, ordersRouter);
+    app.use(`${api}/category`, categoriesRouter);
+    app.use(`${api}/`, paymentRouter);
+
+    app.get("/api/healthcheck", (req, res) => {
+      res.status(200).json({ status: "Server is running!" });
+    });
+
+    app.listen(3000, "0.0.0.0", () => {
+      console.log(`Server running on port ${3000}`);
+    });
+  })
+  .catch((err) => {
+    console.error("DB Connection Failed:", err);
+    process.exit(1);
+  });
 
 // mongoose
 //   .connect(process.env.CONNECTION_STRING, {
