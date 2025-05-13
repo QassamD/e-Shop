@@ -15,7 +15,7 @@ const errorHandler = require("./helpers/error-handler");
 
 // Database connection
 
-const port = "https://e-shop-lbbw.onrender.com" || 3000;
+const port = 3000;
 
 mongoose
   .connect(process.env.CONNECTION_STRING)
