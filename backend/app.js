@@ -35,7 +35,19 @@ app.options("*", cors());
 app.use(bodyParser.json());
 app.use(morgan("tiny"));
 app.use(authJwt());
-app.use("/public/uploads", express.static(__dirname + "/public/uploads"));
+app.use(
+  "/public/uploads",
+  express.static(path.join(__dirname, "public/uploads"))
+);
+
+app.use((req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    "img-src 'self' data: https://*.stripe.com https://*.paypal.com https://your-production-api-domain.com"
+  );
+  next();
+});
+
 app.use(errorHandler);
 
 // Database connection (SINGLE CONNECTION)

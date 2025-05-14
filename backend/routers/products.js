@@ -28,6 +28,13 @@ const storage = multer.diskStorage({
   },
 });
 
+const getBasePath = (req) => {
+  if (process.env.NODE_ENV === "production") {
+    return `https://your-production-api-domain.com/public/uploads/`;
+  }
+  return `${req.protocol}://${req.get("host")}/public/uploads/`;
+};
+
 const upload = multer({ storage: storage });
 
 router.get("/", async (req, res) => {
@@ -63,7 +70,7 @@ router.post("/", upload.single("image"), async (req, res) => {
     if (!category) return res.status(400).send("Invalid Category");
 
     const fileName = req.file.filename;
-    const basePath = `${req.protocol}://${req.get("host")}/public/uploads/`;
+    const basePath = getBasePath;
 
     let product = new Product({
       name: req.body.name,
@@ -112,7 +119,7 @@ router.put("/:id", upload.single("image"), async (req, res) => {
     };
 
     if (req.file) {
-      const basePath = `${req.protocol}://${req.get("host")}/public/uploads/`;
+      const basePath = getBasePath;
       updateData.image = `${basePath}${req.file.filename}`;
     }
 
