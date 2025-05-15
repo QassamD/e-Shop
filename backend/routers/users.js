@@ -8,7 +8,6 @@ const jwt = require("jsonwebtoken");
 const morgan = require("morgan");
 const { verifyAdmin, verifyToken } = require("../middleware/auth");
 const { v4: uuidv4 } = require("uuid");
-app.use(morgan("tiny"));
 
 router.get("/", verifyToken, verifyAdmin, async (req, res) => {
   const userList = await User.find().select("-passwordHash");
