@@ -5,7 +5,7 @@ const router = express.Router();
 const { User } = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { token } = require("morgan");
+const { token, token, token } = require("morgan");
 const { verifyAdmin, verifyToken } = require("../middleware/auth");
 const { v4: uuidv4 } = require("uuid");
 
@@ -83,6 +83,7 @@ router.post("/login", async (req, res) => {
       {
         userId: user._id.toString(),
         isAdmin: user.isAdmin,
+        token: token,
         jti: jti,
 
         // email: user.email,
@@ -104,10 +105,13 @@ router.post("/login", async (req, res) => {
     });
 
     res.status(200).send({
-      name: user.name,
-      userId: user.id,
-      email: user.email,
-      isAdmin: user.isAdmin,
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        isAdmin: user.isAdmin,
+      },
       token: token,
 
       // user: user.email,
