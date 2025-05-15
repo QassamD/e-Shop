@@ -5,9 +5,10 @@ const router = express.Router();
 const { User } = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { token, token, token } = require("morgan");
+const morgan = require("morgan");
 const { verifyAdmin, verifyToken } = require("../middleware/auth");
 const { v4: uuidv4 } = require("uuid");
+app.use(morgan("tiny"));
 
 router.get("/", verifyToken, verifyAdmin, async (req, res) => {
   const userList = await User.find().select("-passwordHash");
