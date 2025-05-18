@@ -20,8 +20,10 @@ const errorHandler = require("./helpers/error-handler");
 app.use(
   cors({
     origin: [
+      "https://gorgeous-youtiao-c51f0a.netlify.app",
+      "http://localhost:4174",
+      "http://localhost:4173",
       "http://localhost:5173",
-      "https://gorgeous-youtiao-c51f0a.netlify.app", // Removed trailing slash
       "https://e-shop-lbbw.onrender.com",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
