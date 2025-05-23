@@ -20,9 +20,9 @@ const errorHandler = require("./helpers/error-handler");
 app.use(
   cors({
     origin: [
+      "http://localhost:4173",
       "https://gorgeous-youtiao-c51f0a.netlify.app",
       "http://localhost:4174",
-      "http://localhost:4173",
       "http://localhost:5173",
       "https://e-shop-lbbw.onrender.com",
     ],

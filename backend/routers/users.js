@@ -3,10 +3,10 @@
 const express = require("express");
 const router = express.Router();
 const { User } = require("../models/user");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
 const morgan = require("morgan");
 const { verifyAdmin, verifyToken } = require("../middleware/auth");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 const { v4: uuidv4 } = require("uuid");
 
 router.get("/", verifyToken, verifyAdmin, async (req, res) => {
@@ -68,43 +68,58 @@ router.post("/register", async (req, res) => {
 });
 
 router.post("/login", async (req, res) => {
-  const user = await User.findOne({ email: req.body.email });
-  const secret = process.env.secret;
+  try {
+    // 1. Input validation
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ message: "Email and password are required" });
+    }
 
-  if (!user) {
-    return res.status(400).send("the user not found");
-  }
-  // console.log(user);
+    // 2. Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials" }); // Generic message for security
+    }
 
-  if (user && bcrypt.compareSync(req.body.password, user.passwordHash)) {
+    // 3. Password comparison (async version)
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // 4. Token generation
     const jti = uuidv4();
+    const secret = process.env.JWT_SECRET; // Ensure this is set in environment
+
+    if (!secret) {
+      throw new Error("JWT secret not configured");
+    }
 
     const token = jwt.sign(
       {
         userId: user._id.toString(),
         isAdmin: user.isAdmin,
-        token: token,
-        jti: jti,
-
-        // email: user.email,
-        // name: user.name,
-        // token: "token",
+        jti: jti, // Remove circular 'token' reference
       },
       secret,
       { expiresIn: "7d" }
     );
 
+    // 5. Store token in database
     await User.findByIdAndUpdate(user._id, {
       $push: {
         tokens: {
-          token: jti,
+          jti: jti,
           revoked: false,
           createdAt: new Date(),
         },
       },
     });
 
-    res.status(200).send({
+    // 6. Response with security considerations
+    res.status(200).json({
       success: true,
       user: {
         id: user._id,
@@ -113,14 +128,14 @@ router.post("/login", async (req, res) => {
         isAdmin: user.isAdmin,
       },
       token: token,
-
-      // user: user.email,
     });
-  } else {
-    return res.status(400).send("password is wrong");
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({
+      message: "Internal server error",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
-
-  // return res.status(200).send(user);
 });
 
 router.get("/get/count", verifyToken, verifyAdmin, async (req, res) => {
