@@ -91,7 +91,7 @@ router.post("/login", async (req, res) => {
 
     // 4. Token generation
     const jti = uuidv4();
-    const secret = process.env.JWT_SECRET; // Ensure this is set in environment
+    const secret = process.env.secret; // Ensure this is set in environment
 
     if (!secret) {
       throw new Error("JWT secret not configured");
@@ -133,7 +133,7 @@ router.post("/login", async (req, res) => {
     console.error("Login error:", error);
     res.status(500).json({
       message: "Internal server error",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      // error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 });
