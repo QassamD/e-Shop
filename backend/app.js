@@ -64,7 +64,7 @@ app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 // Middleware
 app.use(morgan("tiny"));
 app.use(authJwt());
-app.use("/public", express.static(path.join(__dirname, "public")));
+app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 
 app.use((req, res, next) => {
   res.setHeader(
