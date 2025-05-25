@@ -37,7 +37,7 @@ app.options("*", cors());
 app.use(bodyParser.json());
 app.use(morgan("tiny"));
 app.use(authJwt());
-app.use("/public/uploads", express.static((__dirname, "public/uploads")));
+app.use("/public", express.static((__dirname, "public")));
 
 app.use((req, res, next) => {
   res.setHeader(
