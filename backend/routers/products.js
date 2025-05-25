@@ -16,7 +16,10 @@ const storage = multer.diskStorage({
     const isValid = FILE_TYPE_MAP[file.mimetype];
     let uploadError = new Error("invalid image type");
 
-    if (isValid) uploadError = null;
+    if (isValid) {
+      uploadError = null;
+      fs.mkdirSync("public/uploads", { recursive: true });
+    }
 
     cb(uploadError, "public/uploads");
   },
@@ -29,13 +32,20 @@ const storage = multer.diskStorage({
 });
 
 const getBasePath = (req) => {
-  if (process.env.NODE_ENV === "production") {
-    return `https://your-production-api-domain.com/public/uploads/`;
-  }
   return `${req.protocol}://${req.get("host")}/public/uploads/`;
 };
 
-const upload = multer({ storage: storage });
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    if (FILE_TYPE_MAP[file.mimetype]) {
+      cb(null, true);
+    } else {
+      cb(new Error("Invalid file type"), false);
+    }
+  },
+});
 
 router.get("/", async (req, res) => {
   let filter = {};
@@ -70,7 +80,7 @@ router.post("/", upload.single("image"), async (req, res) => {
     if (!category) return res.status(400).send("Invalid Category");
 
     const fileName = req.file.filename;
-    const basePath = getBasePath;
+    const basePath = getBasePath(req);
 
     let product = new Product({
       name: req.body.name,
@@ -119,7 +129,7 @@ router.put("/:id", upload.single("image"), async (req, res) => {
     };
 
     if (req.file) {
-      const basePath = getBasePath;
+      const basePath = getBasePath(req);
       updateData.image = `${basePath}${req.file.filename}`;
     }
 
@@ -186,7 +196,7 @@ router.put(
     const files = req.files;
 
     const imagePaths = [];
-    const basePath = getBasePath;
+    const basePath = getBasePath(req);
     if (files) {
       files.map((file) => {
         imagePaths.push(`${basePath}${file.filename}`);
