@@ -18,10 +18,10 @@ const storage = multer.diskStorage({
 
     if (isValid) {
       uploadError = null;
-      fs.mkdirSync("public/uploads", { recursive: true });
+      fs.mkdirSync("/backend/public/uploads", { recursive: true });
     }
 
-    cb(uploadError, "public/uploads");
+    cb(uploadError, "/backend/public/uploads");
   },
   filename: function (req, file, cb) {
     // const fileName= file.originalName.split(" ").join("_")
