@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
 const cors = require("cors");
+const path = require("path");
 
 // Routes and middleware
 const productsRouter = require("./routers/products");
@@ -16,28 +17,41 @@ const paymentRouter = require("./helpers/payment");
 const authJwt = require("./helpers/jwt");
 const errorHandler = require("./helpers/error-handler");
 
-// CORS Configuration (BEFORE other middleware)
+// Update CORS configuration
 app.use(
   cors({
-    origin: [
-      "http://localhost:4173",
-      "https://gorgeous-youtiao-c51f0a.netlify.app",
-      "http://localhost:4174",
-      "http://localhost:5173",
-      "https://e-shop-lbbw.onrender.com",
-    ],
+    origin: function (origin, callback) {
+      const allowedOrigins = [
+        "http://localhost:4173",
+        "https://your-production-frontend-url.com",
+        "http://localhost:4174",
+        "http://localhost:5173",
+      ];
+
+      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-auth-token"],
     credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   })
 );
+
+// Add proxy trust
+app.set("trust proxy", 1); // Add this before CORS middleware
+
 app.options("*", cors());
 
 // Middleware
 app.use(bodyParser.json());
 app.use(morgan("tiny"));
 app.use(authJwt());
-app.use("/public", express.static((__dirname, "public")));
+app.use("/public", express.static(path.join(__dirname, "public")));
 
 app.use((req, res, next) => {
   res.setHeader(
