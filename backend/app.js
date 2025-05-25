@@ -45,6 +45,12 @@ app.use(
   })
 );
 
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", req.headers.origin);
+  res.header("Access-Control-Allow-Credentials", "true");
+  next();
+});
+
 // Add proxy trust
 app.set("trust proxy", 1);
 
