@@ -77,11 +77,8 @@ app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 // Middleware
 app.use(morgan("tiny"));
 app.use(authJwt());
-app.use(
-  `${api}/public/uploads`,
-  express.static(path.join(__dirname, "public/uploads"))
-);
 
+// Add CSP middleware
 app.use((req, res, next) => {
   res.setHeader(
     "Content-Security-Policy",
@@ -107,6 +104,13 @@ mongoose
 
     // Routes
     const api = process.env.API_URL || "/api/v1"; // Fallback value
+
+    // Configure static file serving after api is defined
+    app.use(
+      `${api}/public/uploads`,
+      express.static(path.join(__dirname, "public/uploads"))
+    );
+
     app.use(`${api}/products`, productsRouter);
     app.use(`${api}/users`, usersRouter);
     app.use(`${api}/orders`, ordersRouter);
