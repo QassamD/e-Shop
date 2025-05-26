@@ -79,10 +79,29 @@ app.use(morgan("tiny"));
 app.use(authJwt());
 
 // Add CSP middleware
+// app.use((req, res, next) => {
+//   res.setHeader(
+//     "Content-Security-Policy",
+//     "default-src 'self'; img-src 'self' data: https://*.stripe.com https://*.paypal.com https://*.render.com https://e-shop-lbbw.onrender.com https://e-shop-lbbw.onrender.com/api/v1/public/uploads/; connect-src 'self' https://*.stripe.com https://*.paypal.com https://*.render.com https://e-shop-lbbw.onrender.com;"
+//   );
+//   next();
+// });
+
 app.use((req, res, next) => {
   res.setHeader(
     "Content-Security-Policy",
-    "default-src 'self'; img-src 'self' data: https://*.stripe.com https://*.paypal.com https://*.render.com https://e-shop-lbbw.onrender.com https://e-shop-lbbw.onrender.com/api/v1/public/uploads/; connect-src 'self' https://*.stripe.com https://*.paypal.com https://*.render.com https://e-shop-lbbw.onrender.com;"
+    [
+      "default-src 'self';",
+      "img-src 'self' data: https: *.stripe.com *.paypal.com *.render.com https://e-shop-lbbw.onrender.com https://e-shop-lbbw.onrender.com/api/v1/public/uploads/;",
+      "connect-src 'self' https: *.stripe.com *.paypal.com *.render.com;",
+      "script-src 'self' https://js.stripe.com https://www.paypal.com;",
+      "style-src 'self' 'unsafe-inline';",
+      "frame-src https://js.stripe.com https://www.paypal.com;",
+      "font-src 'self' data:;",
+      "object-src 'none';",
+      "base-uri 'self';",
+      "form-action 'self' https://checkout.stripe.com https://www.paypal.com;",
+    ].join(" ")
   );
   next();
 });
