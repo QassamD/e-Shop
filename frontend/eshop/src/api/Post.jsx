@@ -5,7 +5,7 @@ import { getAccessToken } from "../utils/auth";
 const api = axios.create({
   baseURL: "https://e-shop-lbbw.onrender.com",
   timeout: 60000, // 60 second timeout for file uploads
-  withCredentials: false,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -23,13 +23,13 @@ const publicRoutes = [
 // Health check function with retry
 const checkServerHealth = async () => {
   try {
-    // Try with minimal headers first
     const response = await axios.get(
-      `${api.defaults.baseURL}/api/v1/products`,
+      `${api.defaults.baseURL}/api/healthcheck`,
       {
         headers: {
           Accept: "application/json",
         },
+        withCredentials: true,
       }
     );
     return response.status === 200;

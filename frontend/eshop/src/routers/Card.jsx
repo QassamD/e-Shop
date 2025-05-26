@@ -91,9 +91,7 @@ const Card = () => {
           console.log("Fetched orders:", orders);
 
           // Find the most recent placed order
-          const placedOrder = orders.findOne(
-            (order) => order.status === "Placed"
-          );
+          const placedOrder = orders.find((order) => order.status === "Placed");
           console.log("Found placed order:", placedOrder);
 
           if (placedOrder) {
