@@ -69,7 +69,7 @@ app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 app.use((req, res, next) => {
   res.setHeader(
     "Content-Security-Policy",
-    "img-src 'self' data: https://*.stripe.com https://*.paypal.com https://your-production-api-domain.com"
+    "img-src 'self' data: https://*.stripe.com https://*.paypal.com https://e-shop-lbbw.onrender.com"
   );
   next();
 });

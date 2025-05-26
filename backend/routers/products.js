@@ -5,22 +5,23 @@ const { Category } = require("../models/category");
 const mongoose = require("mongoose");
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 const { validationResult } = require("express-validator");
 
 // Local file storage configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadPath = path.join(__dirname, "../../public/uploads");
+    const uploadPath = path.join(__dirname, "../public/uploads");
 
     // Create directory if it doesn't exist
-    fs.mkdir(uploadPath, { recursive: true }, (err) => {
-      if (err) return cb(err);
-      cb(null, uploadPath);
-    });
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
-    cb(null, `product-${Date.now()}${ext}`);
+    cb(null, `image-${Date.now()}${ext}`);
   },
 });
 
@@ -55,7 +56,7 @@ const validateProduct = [
       return res.status(400).json({ error: "Product image is required" });
     }
 
-    req.imagePath = `/backend/public/uploads/${req.file.filename}`;
+    req.imagePath = `/uploads/${req.file.filename}`;
     next();
   },
 ];
@@ -97,7 +98,7 @@ router.post("/", validateProduct, async (req, res) => {
     const category = await Category.findById(req.body.category);
     if (!category) return res.status(400).send("Invalid Category");
 
-    const baseUrl = "https://e-shop-lbbw.onrender.com/public/uploads";
+    const baseUrl = "https://e-shop-lbbw.onrender.com";
     const imagePath = req.imagePath ? `${baseUrl}${req.imagePath}` : "";
 
     const product = new Product({
