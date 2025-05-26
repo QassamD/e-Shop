@@ -56,7 +56,8 @@ const validateProduct = [
       return res.status(400).json({ error: "Product image is required" });
     }
 
-    req.imagePath = `/uploads/${req.file.filename}`;
+    // Store just the filename, we'll construct the full URL in the response
+    req.imagePath = req.file.filename;
     next();
   },
 ];
@@ -99,7 +100,9 @@ router.post("/", validateProduct, async (req, res) => {
     if (!category) return res.status(400).send("Invalid Category");
 
     const baseUrl = "https://e-shop-lbbw.onrender.com";
-    const imagePath = req.imagePath ? `${baseUrl}${req.imagePath}` : "";
+    const imagePath = req.imagePath
+      ? `${baseUrl}/api/v1/uploads/${req.imagePath}`
+      : "";
 
     const product = new Product({
       name: req.body.name,
