@@ -10,14 +10,17 @@ const { validationResult } = require("express-validator");
 // Local file storage configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "public/uploads");
+    const uploadPath = path.join(__dirname, "../../public/uploads");
+
+    // Create directory if it doesn't exist
+    fs.mkdir(uploadPath, { recursive: true }, (err) => {
+      if (err) return cb(err);
+      cb(null, uploadPath);
+    });
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(
-      null,
-      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname)
-    );
+    const ext = path.extname(file.originalname);
+    cb(null, `product-${Date.now()}${ext}`);
   },
 });
 
@@ -52,7 +55,7 @@ const validateProduct = [
       return res.status(400).json({ error: "Product image is required" });
     }
 
-    req.imagePath = `/uploads/${req.file.filename}`;
+    req.imagePath = `/backend/public/uploads/${req.file.filename}`;
     next();
   },
 ];
@@ -94,11 +97,14 @@ router.post("/", validateProduct, async (req, res) => {
     const category = await Category.findById(req.body.category);
     if (!category) return res.status(400).send("Invalid Category");
 
+    const baseUrl = "https://e-shop-lbbw.onrender.com/public/uploads";
+    const imagePath = req.imagePath ? `${baseUrl}${req.imagePath}` : "";
+
     const product = new Product({
       name: req.body.name,
       description: req.body.description,
       richDescription: req.body.richDescription,
-      image: req.imagePath,
+      image: imagePath,
       brand: req.body.brand,
       price: req.body.price,
       category: req.body.category,
