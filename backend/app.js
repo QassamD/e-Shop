@@ -85,7 +85,7 @@ app.use(
 app.use((req, res, next) => {
   res.setHeader(
     "Content-Security-Policy",
-    "img-src 'self' data: https://*.stripe.com https://*.paypal.com https://*.render.com"
+    "default-src 'self'; img-src 'self' data: https://*.stripe.com https://*.paypal.com https://*.render.com https://e-shop-lbbw.onrender.com; connect-src 'self' https://*.stripe.com https://*.paypal.com https://*.render.com https://e-shop-lbbw.onrender.com;"
   );
   next();
 });
