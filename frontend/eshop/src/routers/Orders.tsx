@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import useAuthUser from "react-auth-kit/hooks/useAuthUser";
-import api from "../api/Post";
+import api from "../api/Post.jsx";
 import Header from "../components/Header";
 import "./Orders.css";
 import { useNavigate } from "react-router-dom";

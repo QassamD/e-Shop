@@ -1,10 +1,11 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState } from "react";
-import useAuthUser from "react-auth-kit/hooks/useAuthUser";
+import { useAuthUser } from "react-auth-kit";
 import Header from "../components/Header";
-import api from "../api/Post.js";
+import api from "../api/Post.jsx";
 import "./AddCategory.css";
 import { useNavigate } from "react-router-dom";
+
 const AddCategory = () => {
   const auth = useAuthUser();
   const navigate = useNavigate();
@@ -16,13 +17,38 @@ const AddCategory = () => {
     color: "#3498db",
   });
   const [error, setError] = useState(null);
+
+  const storedAuth = localStorage.getItem("_auth");
+  if (!storedAuth) {
+    setError("Please login to access this page");
+    navigate("/user/login");
+    return null;
+  }
+
+  const parsedAuth = JSON.parse(storedAuth);
+  if (!parsedAuth.token) {
+    setError("Authentication token not found");
+    navigate("/user/login");
+    return null;
+  }
+
+  // if (!parsedAuth.user?.isAdmin) {
+  //   setError("Unauthorized access. Admin privileges required.");
+  //   navigate("/");
+  //   return null;
+  // }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     if (category.name) {
       setLoading(true);
       try {
-        const response = await api.post("api/v1/category", category);
+        const response = await api.post("/api/v1/categories", category, {
+          headers: {
+            Authorization: `Bearer ${parsedAuth.token}`,
+          },
+        });
         if (response.status === 201 || response.status === 200) {
           alert("adding category successful!!! ");
           navigate("/category");
@@ -42,7 +68,7 @@ const AddCategory = () => {
   if (loading) {
     return _jsxs("div", {
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("h1", { className: "loading", children: "Loading Category..." }),
       ],
     });
@@ -51,7 +77,7 @@ const AddCategory = () => {
     return _jsxs("div", {
       className: "error-container",
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("p", { className: "error-message", children: error }),
       ],
     });
@@ -60,7 +86,7 @@ const AddCategory = () => {
     return _jsxs("div", {
       className: "error-container",
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("p", {
           className: "error-message",
           children: "You need to be logged in to access this page",
@@ -68,11 +94,11 @@ const AddCategory = () => {
       ],
     });
   }
-  if (!auth?.isAdmin) {
+  if (!auth()?.isAdmin) {
     return _jsxs("div", {
       className: "error-container",
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("p", {
           className: "error-message",
           children: "Unauthorized access. Admin privileges required.",
@@ -82,7 +108,7 @@ const AddCategory = () => {
   }
   return _jsxs("div", {
     children: [
-      _jsx(Header, {}),
+      // _jsx(Header, {}),
       _jsx("div", {
         className: "add-category-container",
         children: _jsxs("div", {

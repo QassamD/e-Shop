@@ -1,8 +1,8 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
-import useAuthUser from "react-auth-kit/hooks/useAuthUser";
+import { useAuthUser } from "react-auth-kit";
 import Header from "../components/Header";
-import api from "../api/Post.js";
+import api from "../api/Post.jsx";
 import "./Category.css";
 import { useNavigate } from "react-router-dom";
 const Category = () => {
@@ -11,11 +11,12 @@ const Category = () => {
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+
   useEffect(() => {
     const fetchCategory = async () => {
       try {
         setLoading(true);
-        const response = await api.get("/api/v1/category");
+        const response = await api.get("/api/v1/categories");
         if (response.data) {
           setCategories(response.data);
         } else {
@@ -32,7 +33,7 @@ const Category = () => {
   }, []);
   const handleDeleteCategory = async (categoryId) => {
     try {
-      if (!auth?.isAdmin) {
+      if (!auth()?.isAdmin) {
         alert("Only admin can delete a category");
         return;
       }
@@ -63,7 +64,7 @@ const Category = () => {
   if (loading) {
     return _jsxs("div", {
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("h1", { className: "loading", children: "Loading Orders..." }),
       ],
     });
@@ -72,14 +73,14 @@ const Category = () => {
     return _jsxs("div", {
       className: "error-container",
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("p", { className: "error-message", children: error }),
       ],
     });
   }
   return _jsxs("div", {
     children: [
-      _jsx(Header, {}),
+      // _jsx(Header, {}),
       _jsxs("div", {
         className: "category-container",
         children: [
@@ -87,7 +88,7 @@ const Category = () => {
             className: "category-header",
             children: [
               _jsx("h1", { children: "Product Categories" }),
-              auth?.isAdmin &&
+              auth()?.isAdmin &&
                 _jsx("button", {
                   className: "add-category-btn",
                   onClick: () => {
@@ -125,7 +126,7 @@ const Category = () => {
                         new Date(category.dataOrdered).toLocaleDateString(),
                       ],
                     }),
-                    auth?.isAdmin &&
+                    auth()?.isAdmin &&
                       _jsxs("div", {
                         className: "category-actions",
                         children: [

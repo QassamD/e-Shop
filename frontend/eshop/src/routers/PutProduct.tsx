@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import useAuthUser from "react-auth-kit/hooks/useAuthUser";
 import { useNavigate, useParams } from "react-router-dom";
-import api from "../api/Post.js";
+import api from "../api/Post.jsx";
 import Header from "../components/Header";
 import "./PutProduct.css";
 import { AxiosError } from "axios";
@@ -40,7 +40,7 @@ const PutProduct = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const auth = useAuthUser<User>();
+  const user = useAuthUser<User>();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
 
@@ -142,7 +142,7 @@ const PutProduct = () => {
       const response = await api.put(`/api/v1/product/${id}`, formDataToSend, {
         headers: {
           "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${auth?.token}`,
+          Authorization: `Bearer ${user?.token}`,
         },
       });
       if (response.status === 200) {
@@ -191,7 +191,7 @@ const PutProduct = () => {
     );
   }
 
-  if (!auth) {
+  if (!user) {
     return (
       <div className="error-container">
         <Header />
@@ -202,7 +202,7 @@ const PutProduct = () => {
     );
   }
 
-  if (!auth?.isAdmin) {
+  if (!user?.isAdmin) {
     return (
       <div className="error-container">
         <Header />

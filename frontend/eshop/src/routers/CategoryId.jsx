@@ -4,9 +4,9 @@ import {
   Fragment as _Fragment,
 } from "react/jsx-runtime";
 import { useState, useEffect } from "react";
-import useAuthUser from "react-auth-kit/hooks/useAuthUser";
+import { useAuthUser } from "react-auth-kit";
 import { useNavigate, useParams } from "react-router-dom";
-import api from "../api/Post.js";
+import api from "../api/Post.jsx";
 import Header from "../components/Header";
 import "./CategoryId.css";
 const CategoryId = () => {
@@ -17,12 +17,13 @@ const CategoryId = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const auth = useAuthUser();
+
   useEffect(() => {
     setLoading(true);
     setError("");
     const fetchCategory = async () => {
       try {
-        const response = await api.get(`/api/v1/category/${id}`);
+        const response = await api.get(`/api/v1/categories/${id}`);
         if (response.status === 200) {
           setCategory(response.data);
         } else {
@@ -38,7 +39,7 @@ const CategoryId = () => {
     };
     const fetchProduct = async () => {
       try {
-        const response = await api.get("api/v1/product");
+        const response = await api.get("api/v1/products");
         setProducts(response.data);
       } catch (error) {
         console.error("Error fetching product:", error);
@@ -51,9 +52,9 @@ const CategoryId = () => {
     }
   }, [error, id]);
   const handleDelete = async () => {
-    if (!auth?.isAdmin) return;
+    if (!auth()?.isAdmin) return;
     try {
-      await api.delete(`/api/v1/category/${id}`, {
+      await api.delete(`/api/v1/categories/${id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
@@ -67,7 +68,7 @@ const CategoryId = () => {
   if (loading) {
     return _jsxs("div", {
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("h1", { className: "loading", children: "Loading Orders..." }),
       ],
     });
@@ -76,7 +77,7 @@ const CategoryId = () => {
     return _jsxs("div", {
       className: "error-container",
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("p", { className: "error-message", children: error }),
       ],
     });
@@ -85,7 +86,7 @@ const CategoryId = () => {
     return _jsxs("div", {
       className: "error-container",
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("p", {
           className: "error-message",
           children: "Category not found",
@@ -95,7 +96,7 @@ const CategoryId = () => {
   }
   return _jsxs(_Fragment, {
     children: [
-      _jsx(Header, {}),
+      // _jsx(Header, {}),
       _jsx("div", {
         className: "category-id-container",
         children: _jsxs("div", {
@@ -198,7 +199,7 @@ const CategoryId = () => {
                     }),
               ],
             }),
-            auth?.isAdmin &&
+            auth()?.isAdmin &&
               _jsxs("div", {
                 className: "admin-actions",
                 children: [

@@ -1,10 +1,20 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const NotFoundPage = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="center">
       404 NotFoundPage
-      <Link to="/">Home</Link>
+      <a
+        href="#"
+        onClick={(e) => {
+          e.preventDefault();
+          navigate("/");
+        }}
+      >
+        Home
+      </a>
     </div>
   );
 };

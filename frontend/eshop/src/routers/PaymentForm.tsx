@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { useParams, useNavigate } from "react-router-dom";
 import useAuthUser from "react-auth-kit/hooks/useAuthUser";
-import api from "../api/Post.js";
+import api from "../api/Post.jsx";
 import Header from "../components/Header";
 
 interface User {
@@ -190,6 +190,7 @@ const PaymentForm = () => {
           <div className="form-group">
             <label>Card Details</label>
             <div className="card-element-wrapper">
+              {/* @ts-ignore */}
               <CardElement
                 options={{
                   hidePostalCode: true,

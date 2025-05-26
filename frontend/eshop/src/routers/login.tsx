@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import useSignIn from "react-auth-kit/hooks/useSignIn";
-import api from "../api/Post.js";
+import api from "../api/Post.jsx";
 import "./login.css";
 import { AxiosError } from "axios";
 import useAuthUser from "react-auth-kit/hooks/useAuthUser";
@@ -63,6 +63,10 @@ const Login = () => {
           isAdmin: Boolean(isAdmin),
           name: response.data.name,
           email,
+          auth: {
+            token: token,
+            type: "Bearer",
+          },
         },
       });
 
@@ -131,9 +135,16 @@ const Login = () => {
 
         <div className="login-footer">
           <span>Don't have an account? </span>
-          <Link to="/user/register" className="signup-link">
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/user/register");
+            }}
+            className="signup-link"
+          >
             Sign up
-          </Link>
+          </a>
         </div>
       </div>
     </div>

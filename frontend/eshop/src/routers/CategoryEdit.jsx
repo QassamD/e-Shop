@@ -1,8 +1,8 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
-import useAuthUser from "react-auth-kit/hooks/useAuthUser";
+import { useAuthUser } from "react-auth-kit";
 import { useNavigate, useParams } from "react-router-dom";
-import api from "../api/Post.js";
+import api from "../api/Post.jsx";
 import Header from "../components/Header";
 import "./CategoryEdit.css";
 const CategoryEdit = () => {
@@ -27,10 +27,23 @@ const CategoryEdit = () => {
     "watch",
     "local_dining",
   ];
+
+  const storedAuth = localStorage.getItem("_auth");
+  if (!storedAuth) {
+    console.log("No stored auth data found"); // Debug log
+    return null;
+  }
+
+  const parsedAuth = JSON.parse(storedAuth);
+  if (!parsedAuth.token) {
+    console.log("No token found in stored auth"); // Debug log
+    return null;
+  }
+
   useEffect(() => {
     const FetchCategory = async () => {
       try {
-        const response = await api.get(`/api/v1/category/${id}`);
+        const response = await api.get(`/api/v1/categories/${id}`);
         setFormData({
           dataOrdered: response.data.dataOrdered || new Date().toISOString(),
           name: response.data.name || "",
@@ -62,10 +75,10 @@ const CategoryEdit = () => {
       for (const [key, value] of formDataToSend.entries()) {
         console.log(key, value);
       }
-      const response = await api.put(`/api/v1/category/${id}`, formData, {
+      const response = await api.put(`/api/v1/categories/${id}`, formData, {
         headers: {
           //   "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${auth?.token}`,
+          Authorization: `Bearer ${parsedAuth.token}`,
         },
       });
       console.log("response", response);
@@ -82,7 +95,7 @@ const CategoryEdit = () => {
   if (loading) {
     return _jsxs("div", {
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("h1", { className: "loading", children: "Loading Category..." }),
       ],
     });
@@ -91,16 +104,16 @@ const CategoryEdit = () => {
     return _jsxs("div", {
       className: "error-container",
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("p", { className: "error-message", children: error }),
       ],
     });
   }
-  if (!auth) {
+  if (!auth()) {
     return _jsxs("div", {
       className: "error-container",
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("p", {
           className: "error-message",
           children: "You need to be logged in to access this page",
@@ -108,11 +121,11 @@ const CategoryEdit = () => {
       ],
     });
   }
-  if (!auth?.isAdmin) {
+  if (!auth()?.isAdmin) {
     return _jsxs("div", {
       className: "error-container",
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("p", {
           className: "error-message",
           children: "Unauthorized access. Admin privileges required.",
@@ -122,7 +135,7 @@ const CategoryEdit = () => {
   }
   return _jsxs("div", {
     children: [
-      _jsx(Header, {}),
+      // _jsx(Header, {}),
       _jsx("div", {
         className: "category-edit-container",
         children: _jsxs("form", {

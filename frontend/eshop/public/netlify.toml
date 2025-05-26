@@ -5,9 +5,15 @@
 
 [[redirects]]
   from = "/*"
-  to = "/index.html"
+  to = "https://e-shop-lbbw.onrender.com/:splat"
   status = 200
   force = true
+
+[headers]
+  [headers."/*"]
+    Access-Control-Allow-Origin = "https://e-shop-lbbw.onrender.com"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
 
 [build.environment]
   NODE_ENV = "production"

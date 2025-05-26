@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../api/Post.js";
+import api from "../api/Post.jsx";
 import axios from "axios";
 import useAuthUser from "react-auth-kit/hooks/useAuthUser";
 import Header from "../components/Header";

@@ -8,6 +8,13 @@
     "build": "cd frontend/eshop && npm run build"
   },
   "devDependencies": {
-    "@types/node": "^22.15.16"
+    "@types/node": "^22.15.16",
+    "@types/react": "^19.1.4",
+    "@types/react-dom": "^19.1.5",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "react-auth-kit": "^3.1.3",
+    "react-error-boundary": "^6.0.0"
   }
 }

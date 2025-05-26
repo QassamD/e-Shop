@@ -4,28 +4,41 @@ import {
   Fragment as _Fragment,
 } from "react/jsx-runtime";
 import { useState, useEffect } from "react";
-import useAuthUser from "react-auth-kit/hooks/useAuthUser";
-import api from "../api/Post.js";
+import { useAuthUser } from "react-auth-kit";
+import api from "../api/Post.jsx";
 import Header from "../components/Header";
 import "./Orders.css";
 import { useNavigate } from "react-router-dom";
+
 const Orders = () => {
   const auth = useAuthUser();
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState([]);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+
   useEffect(() => {
     const fetchOrders = async () => {
-      // console.log(auth?.userId);
-      // console.log(localStorage.getItem("_auth"));
       try {
         setLoading(true);
+        // console.log(auth().id);
+        const storedAuth = localStorage.getItem("_auth");
+        if (!storedAuth || !auth().id) {
+          setError("Please login to view orders");
+          return;
+        }
+
+        const parsedAuth = JSON.parse(storedAuth);
+        if (!parsedAuth.token) {
+          setError("Authentication token not found");
+          return;
+        }
+        console.log(parsedAuth.token);
         const response = await api.get(
-          `/api/v1/order/get/userorder/${auth?.userId}`,
+          `/api/v1/orders/get/userorder/${auth().id}`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("_auth")}`,
+              Authorization: `Bearer ${parsedAuth.token}`,
             },
           }
         );
@@ -35,7 +48,6 @@ const Orders = () => {
           setError("Invalid orders data format");
           setOrders([]); // Ensure we always have an array
         }
-        // console.log("response:", response.data);
       } catch (error) {
         console.error("Failed to load Orders", error);
         setError("Failed to load orders");
@@ -44,13 +56,25 @@ const Orders = () => {
       }
     };
     fetchOrders();
-  }, [auth?.userId]);
+  }, [auth().id]);
   const handleDeleteOrder = async (orderId) => {
     if (!window.confirm("Are you sure you want to delete this order?")) return;
     try {
-      await api.delete(`/api/v1/order/${orderId}`, {
+      const storedAuth = localStorage.getItem("_auth");
+      if (!storedAuth) {
+        setError("Authentication token not found");
+        return;
+      }
+
+      const parsedAuth = JSON.parse(storedAuth);
+      if (!parsedAuth.token) {
+        setError("Authentication token not found");
+        return;
+      }
+
+      await api.delete(`/api/v1/orders/${orderId}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          Authorization: `Bearer ${parsedAuth.token}`,
         },
       });
       setOrders(orders.filter((order) => order._id !== orderId));
@@ -81,7 +105,7 @@ const Orders = () => {
   if (loading) {
     return _jsxs("div", {
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("h1", { className: "loading", children: "Loading Orders..." }),
       ],
     });
@@ -90,20 +114,20 @@ const Orders = () => {
     return _jsxs("div", {
       className: "error-container",
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("p", { className: "error-message", children: error }),
       ],
     });
   }
   return _jsxs(_Fragment, {
     children: [
-      _jsx(Header, {}),
+      // _jsx(Header, {}),
       _jsxs("div", {
         className: "orders-container",
         children: [
           _jsxs("h1", {
             className: "orders-title",
-            children: [auth?.name, "'s Orders"],
+            children: [auth().name, "'s Orders"],
           }),
           orders.length === 0
             ? _jsx("p", { className: "no-orders", children: "No orders found" })
@@ -143,7 +167,7 @@ const Orders = () => {
                                   onClick: () => {
                                     // handleConfirmOrder(order.id);
                                     navigate(
-                                      `/order/${auth?.userId}/confirm/${order._id}`
+                                      `/order/${auth().id}/confirm/${order._id}`
                                     );
                                   },
                                   children: "Confirm Order",

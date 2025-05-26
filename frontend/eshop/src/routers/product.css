@@ -84,3 +84,43 @@
   background: #93c5fd;
   cursor: not-allowed;
 }
+
+/* File input styling */
+.file-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.file-input-label {
+  background: #007bff;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  width: fit-content;
+}
+
+.file-input-label:hover {
+  background: #0056b3;
+}
+
+.file-name {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.image-preview {
+  max-width: 200px;
+  max-height: 200px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+
+.file-error-message {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 5px;
+}

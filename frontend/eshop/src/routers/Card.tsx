@@ -7,7 +7,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import useAuthUser from "react-auth-kit/hooks/useAuthUser";
 import Header from "../components/Header";
-import api from "../api/Post.js";
+import api from "../api/Post.jsx";
 import "./card.css";
 import { AxiosError } from "axios";
 

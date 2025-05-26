@@ -4,9 +4,9 @@ import {
   Fragment as _Fragment,
 } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
-import useAuthUser from "react-auth-kit/hooks/useAuthUser";
+import { useAuthUser } from "react-auth-kit";
 import { useNavigate, useParams } from "react-router-dom";
-import api from "../api/Post.js";
+import api from "../api/Post.jsx";
 import Header from "../components/Header";
 import "./OrderUpdate.css";
 const OrderUpdate = () => {
@@ -16,7 +16,7 @@ const OrderUpdate = () => {
   const [error, setError] = useState(null);
   const [locationError, setLocationError] = useState("");
   const navigate = useNavigate();
-  const isAdmin = auth?.isAdmin || false;
+  const isAdmin = auth()?.isAdmin || false;
   const [orderForm, setOrderForm] = useState({
     _id: "",
     orderItems: [],
@@ -29,11 +29,11 @@ const OrderUpdate = () => {
     phone: "",
     status: "",
     dataOrdered: "",
-    user: auth
+    user: auth()
       ? {
-          userId: auth.userId,
-          name: auth.name,
-          isAdmin: auth.isAdmin,
+          userId: auth().userId,
+          name: auth().name,
+          isAdmin: auth().isAdmin,
         }
       : {
           userId: "",
@@ -49,25 +49,56 @@ const OrderUpdate = () => {
     "Delivered",
     "Canceled",
   ];
+
+  const storedAuth = localStorage.getItem("_auth");
+  if (!storedAuth || !auth().id) {
+    setError("Please login to view orders");
+    return;
+  }
+
+  const parsedAuth = JSON.parse(storedAuth);
+  if (!parsedAuth.token) {
+    setError("Authentication token not found");
+    return;
+  }
+
   useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
     const fetchOrderAndLocation = async () => {
+      if (!id) return;
+
       setLoading(true);
       setError("");
-      try {
-        if (id) {
-          const response = await api.get(`api/v1/order/${id}`);
+
+      let retryCount = 0;
+      const maxRetries = 3;
+
+      while (retryCount < maxRetries) {
+        try {
+          const response = await api.get(`/api/v1/orders/${id}`, {
+            signal: controller.signal,
+            headers: {
+              Authorization: `Bearer ${parsedAuth.token}`,
+            },
+            timeout: 5000,
+          });
+          console.log("response", response);
+          if (!isMounted) return;
+
           const orderData = response.data;
           setOrderForm({
             ...orderData,
-            user: auth
+            user: auth()
               ? {
-                  userId: auth.userId,
-                  name: auth.name,
-                  isAdmin: auth.isAdmin,
+                  userId: auth().userId,
+                  name: auth().name,
+                  isAdmin: auth().isAdmin,
                 }
               : orderData.user,
           });
-          // Fetch location only for new orders or non-admin users with Placed status
+
           if (
             !isAdmin &&
             orderData.status === "Placed" &&
@@ -75,45 +106,86 @@ const OrderUpdate = () => {
           ) {
             await getGeolocation();
           }
+          break; // Success, exit retry loop
+        } catch (error) {
+          if (!isMounted) return;
+
+          if (error.name === "AbortError" || error.message === "canceled") {
+            console.log("Request was cancelled");
+            return;
+          }
+
+          retryCount++;
+          if (retryCount === maxRetries) {
+            if (error.response) {
+              setError(
+                error.response.data?.message || "Failed to load order data"
+              );
+            } else if (error.request) {
+              setError(
+                "No response from server. Please check your connection."
+              );
+            } else {
+              setError("An unexpected error occurred");
+            }
+            console.error("Error fetching Order:", error);
+          } else {
+            // Wait before retrying
+            await new Promise((resolve) =>
+              setTimeout(resolve, 1000 * retryCount)
+            );
+            continue;
+          }
         }
-      } catch (error) {
-        console.error("Error fetching Order:", error);
-      } finally {
+      }
+
+      if (isMounted) {
         setLoading(false);
       }
     };
+
     const getGeolocation = async () => {
       if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
           async (position) => {
             try {
-              const response = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`
-              );
-              const data = await response.json();
+              // Instead of directly fetching from Nominatim, we'll just use the coordinates
+              // and let the user fill in their address manually
               setOrderForm((prev) => ({
                 ...prev,
-                shippingAddress1: data.address?.road || "",
-                city: data.address?.city || "",
-                country: data.address?.country || "",
-                zip: data.address?.postcode || "",
+                shippingAddress1: "Please enter your address",
+                city: "Please enter your city",
+                country: "Please enter your country",
+                zip: "Please enter your zip code",
               }));
+              setLocationError("Please fill in your shipping details manually");
             } catch (error) {
-              setLocationError("Failed to fetch address details");
+              setLocationError(
+                "Failed to get location. Please enter your address manually."
+              );
             }
           },
           (error) => {
             setLocationError(
-              "Please enable location access to autofill address"
+              "Please enable location access or enter your address manually"
             );
           }
         );
       } else {
-        setLocationError("Geolocation is not supported by your browser");
+        setLocationError(
+          "Geolocation is not supported. Please enter your address manually"
+        );
       }
     };
+
     fetchOrderAndLocation();
-  }, [auth, id, isAdmin]);
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, [id]); // Only re-run if these dependencies change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setOrderForm((prev) => ({ ...prev, [name]: value }));
@@ -149,15 +221,15 @@ const OrderUpdate = () => {
           product: item.product?._id,
           quantity: item.quantity,
         })),
-        user: auth?.userId,
+        user: auth()?.userId,
       };
-      const response = await api.put(`/api/v1/order/${id}`, orderData, {
+      const response = await api.put(`/api/v1/orders/${id}`, orderData, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          Authorization: `Bearer ${parsedAuth.token}`,
         },
       });
       if (response.status === 200) {
-        navigate(isAdmin ? `/admin/orders` : `/payment/${orderForm._id}`);
+        navigate(`/payment/${orderForm._id}`);
       }
     } catch (error) {
       setError("Failed to update order");
@@ -179,9 +251,9 @@ const OrderUpdate = () => {
         orderItems: updatedItems,
         totalPrice: newTotal,
       });
-      await api.delete(`/api/v1/order/${id}/items/${itemId}`, {
+      await api.delete(`/api/v1/orders/${id}/items/${itemId}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          Authorization: `Bearer ${parsedAuth.token}`,
         },
       });
     } catch (error) {
@@ -194,7 +266,7 @@ const OrderUpdate = () => {
   if (loading) {
     return _jsxs("div", {
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("h1", { className: "loading", children: "Loading Order..." }),
       ],
     });
@@ -203,16 +275,16 @@ const OrderUpdate = () => {
     return _jsxs("div", {
       className: "error-container",
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("p", { className: "error-message", children: error }),
       ],
     });
   }
-  if (!auth) {
+  if (!auth()) {
     return _jsxs("div", {
       className: "error-container",
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("p", {
           className: "error-message",
           children: "You need to be logged in to access this page",
@@ -222,7 +294,7 @@ const OrderUpdate = () => {
   }
   return _jsxs(_Fragment, {
     children: [
-      _jsx(Header, {}),
+      // _jsx(Header, {}),
       _jsxs("div", {
         className: "order-update-container",
         children: [

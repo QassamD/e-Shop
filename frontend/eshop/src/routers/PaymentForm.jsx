@@ -6,9 +6,10 @@ import {
 import { useState, useEffect, useRef } from "react";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { useParams, useNavigate } from "react-router-dom";
-import useAuthUser from "react-auth-kit/hooks/useAuthUser";
-import api from "../api/Post.js";
-import Header from "../components/Header";
+import { useAuthUser } from "react-auth-kit";
+import api from "../api/Post.jsx";
+// import Header from "../components/Header";
+
 const PaymentForm = () => {
   const { id } = useParams();
   const auth = useAuthUser();
@@ -28,13 +29,24 @@ const PaymentForm = () => {
       isMounted.current = false;
     };
   }, []);
+  const storedAuth = localStorage.getItem("_auth");
+  if (!storedAuth) {
+    console.log("No stored auth data found"); // Debug log
+    return null;
+  }
+
+  const parsedAuth = JSON.parse(storedAuth);
+  if (!parsedAuth.token) {
+    console.log("No token found in stored auth"); // Debug log
+    return null;
+  }
   useEffect(() => {
     const fetchOrder = async () => {
       try {
         if (isMounted.current) setLoading(true);
-        const response = await api.get(`api/v1/order/${id}`, {
+        const response = await api.get(`api/v1/orders/${id}`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("_auth")}`,
+            Authorization: `Bearer ${parsedAuth.token}`,
           },
         });
         if (isMounted.current) setOrder(response.data);
@@ -76,14 +88,17 @@ const PaymentForm = () => {
         setErrorMessage(null);
       }
       // Create payment intent first
-      const { data } = await api.post(`/api/v1/create-stripe-payment-intent`, {
-        amount: Math.round(order.totalPrice * 100),
-        currency: "usd",
-        metadata: {
-          orderId: order._id,
-          userId: auth?.userId || "unknown",
-        },
-      });
+      const { data } = await api.post(
+        `/api/v1/payments/create-stripe-payment-intent`,
+        {
+          amount: Math.round(order.totalPrice * 100),
+          currency: "usd",
+          metadata: {
+            orderId: order._id,
+            userId: auth?.userId || "unknown",
+          },
+        }
+      );
       const { error, paymentIntent } = await stripe.confirmCardPayment(
         data.clientSecret,
         {
@@ -96,11 +111,11 @@ const PaymentForm = () => {
       // Check for errors
       if (error) throw error;
       await api.put(
-        `api/v1/order/${order._id}/status`,
+        `api/v1/orders/${order._id}/status`,
         { status: "Processing" }, // Adjust payload according to your backend
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("_auth")}`,
+            Authorization: `Bearer ${parsedAuth.token}`,
           },
         }
       );
@@ -123,7 +138,7 @@ const PaymentForm = () => {
   if (!stripe || !elements) {
     return _jsxs("div", {
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("h1", {
           className: "loading",
           children: "Initializing payment system...",
@@ -134,7 +149,7 @@ const PaymentForm = () => {
   if (loading) {
     return _jsxs("div", {
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("h1", {
           className: "loading",
           children: "Loading Payment Details...",
@@ -146,7 +161,7 @@ const PaymentForm = () => {
     return _jsxs("div", {
       className: "error-container",
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("p", {
           className: "error-message",
           children: "You need to be logged in to access this page",
@@ -156,7 +171,7 @@ const PaymentForm = () => {
   }
   return _jsxs(_Fragment, {
     children: [
-      _jsx(Header, {}),
+      // _jsx(Header, {}),
       _jsx("div", {
         className: "payment-container",
         children: _jsxs("form", {

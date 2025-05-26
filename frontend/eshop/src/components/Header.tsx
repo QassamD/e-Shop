@@ -1,5 +1,5 @@
 import useSignOut from "react-auth-kit/hooks/useSignOut";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import useAuthUser from "react-auth-kit/hooks/useAuthUser";
 import { useState } from "react";
 import "./Header.css"; // We'll create this CSS file
@@ -34,10 +34,17 @@ const Header = () => {
   return (
     <header className="header">
       <div className="header-container">
-        <Link to="/" className="logo">
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            navigate("/");
+          }}
+          className="logo"
+        >
           <span className="logo-icon">🛍</span>
           <span className="logo-text">E-Commerce</span>
-        </Link>
+        </a>
 
         <button
           className={`hamburger ${isMenuOpen ? "active" : ""}`}
@@ -52,32 +59,48 @@ const Header = () => {
         <nav className={`nav-menu ${isMenuOpen ? "active" : ""}`}>
           <ul className="nav-list">
             <li className="nav-item">
-              <NavLink to="/" className="nav-link" onClick={closeMenu} end>
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate("/");
+                  closeMenu();
+                }}
+                className="nav-link"
+              >
                 Home
-              </NavLink>
+              </a>
             </li>
 
             {auth && (
               <li className="nav-item">
-                <NavLink
-                  to={`/order/${auth.userId}`}
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(`/order/${auth.userId}`);
+                    closeMenu();
+                  }}
                   className="nav-link"
-                  onClick={closeMenu}
                 >
                   My Orders
-                </NavLink>
+                </a>
               </li>
             )}
 
             {auth?.isAdmin && (
               <li className="nav-item">
-                <NavLink
-                  to="/admin/dashboard"
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate("/admin/dashboard");
+                    closeMenu();
+                  }}
                   className="nav-link"
-                  onClick={closeMenu}
                 >
                   Admin Dashboard
-                </NavLink>
+                </a>
               </li>
             )}
           </ul>
@@ -97,9 +120,16 @@ const Header = () => {
               </div>
             </div>
           ) : (
-            <NavLink to="/user/login" className="login-link">
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("/user/login");
+              }}
+              className="login-link"
+            >
               Login
-            </NavLink>
+            </a>
           )}
         </div>
       </div>

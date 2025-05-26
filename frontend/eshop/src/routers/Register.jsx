@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState } from "react";
-import api from "../api/Post.js";
+import api from "../api/Post.jsx";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./Register.css";
@@ -65,7 +65,7 @@ const Register = () => {
     if (!validateForm()) return;
     setLoading(true);
     try {
-      const response = await api.post("/api/v1/user/register", {
+      const response = await api.post("/api/v1/users/register", {
         ...formData,
         // Add address object structure expected by backend
         address: {

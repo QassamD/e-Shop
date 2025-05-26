@@ -4,9 +4,9 @@ import {
   Fragment as _Fragment,
 } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
-import useAuthUser from "react-auth-kit/hooks/useAuthUser";
+import { useAuthUser } from "react-auth-kit";
 import { useNavigate, useParams } from "react-router-dom";
-import api from "../api/Post.js";
+import api from "../api/Post.jsx";
 import Header from "../components/Header";
 import "./PutProduct.css";
 import { AxiosError } from "axios";
@@ -31,10 +31,23 @@ const PutProduct = () => {
     numReviews: 0,
     isFeatured: false,
   });
+
+  const storedAuth = localStorage.getItem("_auth");
+  if (!storedAuth) {
+    console.log("No stored auth data found"); // Debug log
+    return null;
+  }
+
+  const parsedAuth = JSON.parse(storedAuth);
+  if (!parsedAuth.token) {
+    console.log("No token found in stored auth"); // Debug log
+    return null;
+  }
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await api.get(`/api/v1/product/${id}`);
+        const response = await api.get(`/api/v1/products/${id}`);
         setFormData({
           name: response.data.name || "",
           description: response.data.description || "",
@@ -54,7 +67,7 @@ const PutProduct = () => {
     };
     const fetchCategories = async () => {
       try {
-        const response = await api.get("/api/v1/category");
+        const response = await api.get("/api/v1/categories");
         setCategories(response.data);
       } catch (error) {
         console.error("Error fetching categories:", error);
@@ -98,10 +111,10 @@ const PutProduct = () => {
       if (selectedFile) {
         formDataToSend.append("image", selectedFile);
       }
-      const response = await api.put(`/api/v1/product/${id}`, formDataToSend, {
+      const response = await api.put(`/api/v1/products/${id}`, formDataToSend, {
         headers: {
           "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${auth?.token}`,
+          Authorization: `Bearer ${parsedAuth.token}`,
         },
       });
       if (response.status === 200) {
@@ -133,7 +146,7 @@ const PutProduct = () => {
   if (loading) {
     return _jsxs("div", {
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("h1", { className: "loading", children: "Loading Product..." }),
       ],
     });
@@ -142,16 +155,16 @@ const PutProduct = () => {
     return _jsxs("div", {
       className: "error-container",
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("p", { className: "error-message", children: error }),
       ],
     });
   }
-  if (!auth) {
+  if (!auth()) {
     return _jsxs("div", {
       className: "error-container",
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("p", {
           className: "error-message",
           children: "You need to be logged in to access this page",
@@ -159,11 +172,11 @@ const PutProduct = () => {
       ],
     });
   }
-  if (!auth?.isAdmin) {
+  if (!auth()?.isAdmin) {
     return _jsxs("div", {
       className: "error-container",
       children: [
-        _jsx(Header, {}),
+        // _jsx(Header, {}),
         _jsx("p", {
           className: "error-message",
           children: "Unauthorized access. Admin privileges required.",
@@ -173,7 +186,7 @@ const PutProduct = () => {
   }
   return _jsxs(_Fragment, {
     children: [
-      _jsx(Header, {}),
+      // _jsx(Header, {}),
       _jsx("div", {
         className: "put-product-container",
         children: _jsxs("form", {

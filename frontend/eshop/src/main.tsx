@@ -3,32 +3,14 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 import AuthProvider from "react-auth-kit";
-import createStore from "react-auth-kit/createStore";
 
-interface AuthState {
-  token: string;
-  userId: string;
-  isAdmin: boolean;
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
 }
 
-const store = createStore<AuthState>({
-  authName: "_auth",
-  authType: "localstorage",
-  cookieDomain: window.location.hostname,
-  cookieSecure: false,
-});
-
-export const getAccessToken = () => {
-  try {
-    const raw = localStorage.getItem("_auth");
-    if (!raw) return null;
-    const parsed: AuthState = JSON.parse(raw);
-    return parsed.token || null;
-  } catch (e) {
-    console.error("Token retrieval error:", e);
-    return null;
-  }
-};
+interface ErrorBoundaryState {
+  hasError: boolean;
+}
 
 const loadScript = (src: string): Promise<void> => {
   return new Promise((resolve, reject) => {
@@ -73,10 +55,63 @@ if (!rootElement) throw new Error("Failed to find the root element");
 
 const root = createRoot(rootElement);
 
+// Create a custom error boundary component
+class ErrorBoundary extends React.Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(_error: Error): ErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+    console.error("Error caught by boundary:", error, errorInfo);
+  }
+
+  render(): React.ReactNode {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: "20px", textAlign: "center" }}>
+          <h2>Something went wrong.</h2>
+          <button
+            onClick={() => this.setState({ hasError: false })}
+            style={{
+              padding: "10px 20px",
+              marginTop: "10px",
+              cursor: "pointer",
+            }}
+          >
+            Try again
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// Cast AuthProvider to any to bypass TypeScript errors
+const AuthProviderComponent = AuthProvider as any;
+
 root.render(
   <React.StrictMode>
-    <AuthProvider store={store}>
-      <AppWrapper />
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProviderComponent
+        authType="cookie"
+        authName="_auth"
+        cookieDomain={window.location.hostname}
+        cookieSecure={window.location.protocol === "https:"}
+        cookieSameSite="strict"
+        cookiePath="/"
+      >
+        <AppWrapper />
+      </AuthProviderComponent>
+    </ErrorBoundary>
   </React.StrictMode>
 );

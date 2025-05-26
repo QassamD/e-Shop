@@ -1,14 +1,22 @@
-import "./App.css";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import React, { useEffect, useMemo, useState, FunctionComponent } from "react";
+import AuthProvider from "react-auth-kit";
+import createStore from "react-auth-kit/createStore";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  RouteObject,
+} from "react-router-dom";
+import "./App.css";
+
+// Components
 import HomePage from "./routers/HomePage";
 import About from "./components/About";
 import NotFoundPage from "./routers/NotFoundPage";
 import Card from "./routers/Card";
-import api from "./api/Post.js";
-import { useEffect, useMemo, useState } from "react";
-import Login from "./routers/login";
+import api from "./api/Post.jsx";
+import Login from "./routers/Login";
 import Register from "./routers/Register";
 import Product from "./routers/product";
 import Orders from "./routers/Orders";
@@ -20,117 +28,143 @@ import CategoryEdit from "./routers/CategoryEdit";
 import OrderUpdate from "./routers/OrderUpdate";
 import PaymentForm from "./routers/PaymentForm";
 
-function App() {
-  const [product, setProduct] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const stripePromise = useMemo(() => {
-    return loadStripe(
-      "pk_test_51QyJT7E8IVJvL5F7Qj3A5D3TvxDFe0AxQkEB0bCVkxPtjKbnu4i8fBW3vGPmxagLdR0eMvQHsXv0zEjWqPeFmiDs00o7qY0WQ5"
-    );
-  }, []);
+interface ProductType {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  countInStock: number;
+  rating?: number;
+  numReviews?: number;
+  category: string;
+}
 
-  const router = createBrowserRouter(
-    [
-      {
-        path: "/",
-        element: <HomePage products={product} />,
-        errorElement: <NotFoundPage />,
-      },
-      {
-        path: "/about",
-        element: <About />,
-      },
-      {
-        path: "/card/:id",
-        element: <Card />,
-      },
-      {
-        path: "/user/login",
-        element: <Login />,
-      },
-      {
-        path: "/user/Register",
-        element: <Register />,
-      },
-      {
-        path: "/product",
-        element: <Product />,
-      },
-      {
-        path: "/order/:userid",
-        element: <Orders />,
-      },
-      {
-        path: "/order/:userid/confirm/:id",
-        element: <OrderUpdate />,
-      },
-      {
-        path: "/category",
-        element: <Category />,
-      },
-      {
-        path: "/category/add",
-        element: <AddCategory />,
-      },
-      {
-        path: "/product/update/:id",
-        element: <PutProduct />,
-      },
-      {
-        path: "/category/:id",
-        element: <CategoryId />,
-      },
-      {
-        path: "/category/edit/:id",
-        element: <CategoryEdit />,
-      },
-      {
-        path: "/payment/:id",
-        element: <PaymentForm />,
-      },
-    ],
-    {
-      future: {
-        v7_normalizeFormMethod: true,
-      },
-    }
-  );
+// Create a wrapper component for the home route
+const HomeRouteWrapper: FunctionComponent = () => {
+  const [products, setProducts] = useState<ProductType[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPost = async () => {
+    const fetchProducts = async () => {
       try {
-        const response = await api.get("/api/v1/product");
-        if (response.data) {
-          console.log("Products data:", response.data);
-          setProduct(response.data);
-        } else {
-          console.error("No data received from the API");
-          setProduct([]);
-        }
-      } catch (error: any) {
-        console.error("Error fetching products:", {
-          message: error.message,
-          status: error.response?.status,
-          data: error.response?.data,
-        });
-        setProduct([]);
+        const response = await api.get("/api/v1/products");
+        const data = response.data.map((product: any) => ({
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          price: product.price,
+          image: product.image || "/default-image.jpg",
+          countInStock: product.countInStock,
+          rating: product.rating,
+          numReviews: product.numReviews,
+          category: product.category || "Uncategorized",
+        }));
+        setProducts(data);
+      } catch (error) {
+        console.error("Error fetching products:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPost();
+    fetchProducts();
   }, []);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div className="loading-spinner">Loading...</div>;
+  return <HomePage products={products} />;
+};
+
+// Define routes outside of any component
+const routes = [
+  {
+    path: "/",
+    element: <HomeRouteWrapper />,
+    errorElement: <NotFoundPage />,
+  },
+  {
+    path: "/about",
+    element: <About />,
+  },
+  {
+    path: "/card/:id",
+    element: <Card />,
+  },
+  {
+    path: "/user/login",
+    element: <Login />,
+  },
+  {
+    path: "/user/register",
+    element: <Register />,
+  },
+  {
+    path: "/product",
+    element: <Product />,
+  },
+  {
+    path: "/order/:userid",
+    element: <Orders />,
+  },
+  {
+    path: "/order/:userid/confirm/:id",
+    element: <OrderUpdate />,
+  },
+  {
+    path: "/category",
+    element: <Category />,
+  },
+  {
+    path: "/category/add",
+    element: <AddCategory />,
+  },
+  {
+    path: "/product/update/:id",
+    element: <PutProduct />,
+  },
+  {
+    path: "/category/:id",
+    element: <CategoryId />,
+  },
+  {
+    path: "/category/edit/:id",
+    element: <CategoryEdit />,
+  },
+  {
+    path: "/payment/:id",
+    element: <PaymentForm />,
+  },
+];
+
+// Create router outside of any component
+const router = createBrowserRouter(routes);
+
+const App: FunctionComponent = () => {
+  const stripePromise = useMemo(
+    () =>
+      loadStripe(
+        "pk_test_51QyJT7E8IVJvL5F7Qj3A5D3TvxDFe0AxQkEB0bCVkxPtjKbnu4i8fBW3vGPmxagLdR0eMvQHsXv0zEjWqPeFmiDs00o7qY0WQ5"
+      ),
+    []
+  );
 
   return (
-    <>
+    // @ts-ignore
+    <AuthProvider
+      store={createStore({
+        authName: "_auth",
+        authType: "cookie",
+        cookieDomain: window.location.hostname,
+        cookieSecure: window.location.protocol === "https:",
+      })}
+    >
+      {/* @ts-ignore */}
       <Elements stripe={stripePromise}>
+        {/* @ts-ignore */}
         <RouterProvider router={router} />
       </Elements>
-    </>
+    </AuthProvider>
   );
-}
+};
 
 export default App;
