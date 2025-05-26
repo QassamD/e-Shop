@@ -101,7 +101,7 @@ router.post("/", validateProduct, async (req, res) => {
 
     const baseUrl = "https://e-shop-lbbw.onrender.com";
     const imagePath = req.imagePath
-      ? `${baseUrl}/api/v1/uploads/${req.imagePath}`
+      ? `${baseUrl}/api/v1/public/uploads/${req.imagePath}`
       : "";
 
     const product = new Product({
@@ -131,7 +131,7 @@ router.put("/:id", upload.single("image"), async (req, res) => {
     const updates = { ...req.body };
 
     if (req.file) {
-      updates.image = `/uploads/${req.file.filename}`;
+      updates.image = `/backend/public/uploads/${req.file.filename}`;
     }
 
     const product = await Product.findByIdAndUpdate(req.params.id, updates, {
