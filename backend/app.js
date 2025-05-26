@@ -78,14 +78,14 @@ app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 app.use(morgan("tiny"));
 app.use(authJwt());
 app.use(
-  "/api/v1/public/uploads",
+  `${api}/public/uploads`,
   express.static(path.join(__dirname, "public/uploads"))
 );
 
 app.use((req, res, next) => {
   res.setHeader(
     "Content-Security-Policy",
-    "default-src 'self'; img-src * data: blob:; connect-src 'self' https://*.stripe.com https://*.paypal.com https://*.render.com https://e-shop-lbbw.onrender.com;"
+    "default-src 'self'; img-src 'self' data: https://*.stripe.com https://*.paypal.com https://*.render.com https://e-shop-lbbw.onrender.com https://e-shop-lbbw.onrender.com/api/v1/public/uploads/; connect-src 'self' https://*.stripe.com https://*.paypal.com https://*.render.com https://e-shop-lbbw.onrender.com;"
   );
   next();
 });
