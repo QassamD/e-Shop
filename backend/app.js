@@ -24,7 +24,7 @@ app.use(
   cors({
     origin: function (origin, callback) {
       const allowedOrigins = [
-        "https://eshop010.netlify.app/",
+        "https://eshop010.netlify.app",
         "http://localhost:4173",
         "http://localhost:4174",
         "http://localhost:5173",
