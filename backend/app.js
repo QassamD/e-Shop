@@ -7,6 +7,7 @@ const bodyParser = require("body-parser");
 const morgan = require("morgan");
 const cors = require("cors");
 const path = require("path");
+const cloudinary = require("cloudinary").v2;
 
 // Routes and middleware
 const productsRouter = require("./routers/products");
@@ -18,6 +19,13 @@ const authJwt = require("./helpers/jwt");
 const errorHandler = require("./helpers/error-handler");
 
 app.enable("trust proxy");
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  secure: true,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // Update CORS configuration
 app.use(

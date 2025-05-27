@@ -4,60 +4,67 @@ const { Product } = require("../models/product");
 const { Category } = require("../models/category");
 const mongoose = require("mongoose");
 const multer = require("multer");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("cloudinary").v2;
 const path = require("path");
 const fs = require("fs");
 const { validationResult } = require("express-validator");
 
 // Local file storage configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadPath = path.join(__dirname, "../public/uploads");
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     const uploadPath = path.join(__dirname, "../public/uploads");
 
-    // Create directory if it doesn't exist
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `image-${Date.now()}${ext}`);
+//     // Create directory if it doesn't exist
+//     if (!fs.existsSync(uploadPath)) {
+//       fs.mkdirSync(uploadPath, { recursive: true });
+//     }
+//     cb(null, uploadPath);
+//   },
+//   filename: (req, file, cb) => {
+//     const ext = path.extname(file.originalname);
+//     cb(null, `image-${Date.now()}${ext}`);
+//   },
+// });
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "e-shop/products",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+    transformation: [{ width: 800, height: 800, crop: "limit" }],
   },
 });
+
+const upload = multer({ storage });
 
 // File filter for image uploads
-const fileFilter = (req, file, cb) => {
-  const filetypes = /jpeg|jpg|png|webp/;
-  const mimetype = filetypes.test(file.mimetype);
-  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+// const fileFilter = (req, file, cb) => {
+//   const filetypes = /jpeg|jpg|png|webp/;
+//   const mimetype = filetypes.test(file.mimetype);
+//   const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
 
-  if (mimetype && extname) {
-    return cb(null, true);
-  }
-  cb(new Error("Invalid file type. Only images are allowed."));
-};
+//   if (mimetype && extname) {
+//     return cb(null, true);
+//   }
+//   cb(new Error("Invalid file type. Only images are allowed."));
+// };
 
-const upload = multer({
-  storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-  fileFilter: fileFilter,
-});
+// const upload = multer({
+//   storage: storage,
+//   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+//   fileFilter: fileFilter,
+// });
 
 // Validation middleware
 const validateProduct = [
   upload.single("image"),
-  (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
+  async (req, res, next) => {
     if (!req.file) {
       return res.status(400).json({ error: "Product image is required" });
     }
 
-    // Store just the filename, we'll construct the full URL in the response
-    req.imagePath = req.file.filename;
+    req.imageUrl = req.file.path; // Cloudinary URL
     next();
   },
 ];
@@ -99,10 +106,8 @@ router.post("/", validateProduct, async (req, res) => {
     const category = await Category.findById(req.body.category);
     if (!category) return res.status(400).send("Invalid Category");
 
-    const baseUrl = "https://e-shop-lbbw.onrender.com";
-    const imagePath = req.imagePath
-      ? `${baseUrl}/api/v1/public/uploads/${req.imagePath}`
-      : "";
+    // const baseUrl = "https://e-shop-lbbw.onrender.com";
+    const imagePath = req.imageUrl || "";
 
     const product = new Product({
       name: req.body.name,
@@ -128,22 +133,30 @@ router.post("/", validateProduct, async (req, res) => {
 // Update product
 router.put("/:id", upload.single("image"), async (req, res) => {
   try {
-    const updates = { ...req.body };
-
-    if (req.file) {
-      updates.image = `/backend/public/uploads/${req.file.filename}`;
-    }
-
-    const product = await Product.findByIdAndUpdate(req.params.id, updates, {
-      new: true,
-      runValidators: true,
-    });
-
+    const product = await Product.findById(req.params.id);
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    res.json(product);
+    // If a new image is uploaded
+    if (req.file) {
+      // Delete old image from Cloudinary
+      if (product.cloudinary_id) {
+        await cloudinary.uploader.destroy(product.cloudinary_id);
+      }
+
+      // Save new image info
+      req.body.image = req.file.path;
+      req.body.cloudinary_id = req.file.filename;
+    }
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    res.json(updatedProduct);
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -152,12 +165,20 @@ router.put("/:id", upload.single("image"), async (req, res) => {
 // Delete product
 router.delete("/:id", async (req, res) => {
   try {
-    const product = await Product.findByIdAndDelete(req.params.id);
+    const product = await Product.findById(req.params.id);
     if (!product) {
       return res
         .status(404)
         .json({ success: false, message: "Product not found" });
     }
+
+    // Delete image from Cloudinary
+    if (product.cloudinary_id) {
+      await cloudinary.uploader.destroy(product.cloudinary_id);
+    }
+
+    await product.remove();
+
     res.json({ success: true, message: "Product deleted" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
