@@ -8,6 +8,7 @@ const morgan = require("morgan");
 const cors = require("cors");
 const path = require("path");
 const cloudinary = require("cloudinary").v2;
+const helmet = require("helmet");
 
 // Routes and middleware
 const productsRouter = require("./routers/products");
@@ -88,32 +89,29 @@ app.use(morgan("tiny"));
 app.use(authJwt());
 
 // Add CSP middleware
-// app.use((req, res, next) => {
-//   res.setHeader(
-//     "Content-Security-Policy",
-//     "default-src 'self'; img-src 'self' data: https://*.stripe.com https://*.paypal.com https://*.render.com https://e-shop-lbbw.onrender.com https://e-shop-lbbw.onrender.com/api/v1/public/uploads/; connect-src 'self' https://*.stripe.com https://*.paypal.com https://*.render.com https://e-shop-lbbw.onrender.com;"
-//   );
-//   next();
-// });
-
-app.use((req, res, next) => {
-  res.setHeader(
-    "Content-Security-Policy",
-    [
-      "default-src 'self';",
-      "img-src 'self' data: https: *.stripe.com *.paypal.com *.render.com https://e-shop-lbbw.onrender.com https://e-shop-lbbw.onrender.com/api/v1/public/uploads/;",
-      "connect-src 'self' https: *.stripe.com *.paypal.com *.render.com;",
-      "script-src 'self' https://js.stripe.com https://www.paypal.com;",
-      "style-src 'self' 'unsafe-inline';",
-      "frame-src https://js.stripe.com https://www.paypal.com;",
-      "font-src 'self' data:;",
-      "object-src 'none';",
-      "base-uri 'self';",
-      "form-action 'self' https://checkout.stripe.com https://www.paypal.com;",
-    ].join(" ")
-  );
-  next();
-});
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      imgSrc: [
+        "'self'",
+        "data:",
+        "https://*.stripe.com",
+        "https://*.paypal.com",
+        "https://*.cloudinary.com",
+        "https://res.cloudinary.com",
+      ],
+      connectSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'"],
+      frameSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+    },
+  })
+);
 
 app.use(errorHandler);
 
