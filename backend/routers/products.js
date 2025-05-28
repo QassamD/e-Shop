@@ -177,7 +177,8 @@ router.delete("/:id", async (req, res) => {
       await cloudinary.uploader.destroy(product.cloudinary_id);
     }
 
-    await product.remove();
+    // Delete the product
+    await Product.findByIdAndDelete(req.params.id);
 
     res.json({ success: true, message: "Product deleted" });
   } catch (error) {
